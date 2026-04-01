@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Camera Feed</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+```
+h1 {
+  margin-top: 20px;
+}
+
+video {
+  margin-top: 20px;
+  width: 80%;
+  max-width: 700px;
+  border-radius: 10px;
+  border: 3px solid #444;
+  background: black;
+}
+
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #0a84ff;
+  border: none;
+  color: white;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #006edc;
+}
+```
+
+  </style>
+</head>
+<body>
+
+  <h1>📹 Live Camera Feed</h1>
+
+<video id="video" autoplay playsinline></video> <br> <button onclick="startCamera()">Start Camera</button>
+
+  <script>
+    const video = document.getElementById("video");
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Camera access denied or not available.");
+        console.error(err);
+      }
+    }
+  </script>
+
+</body>
+</html>
