@@ -3,54 +3,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Two Person Camera View</title>
+  <title>Manual Video Call (No Server)</title>
   <style>
     body {
-      margin: 0;
       background: #0f172a;
       color: white;
-      font-family: Arial, sans-serif;
       text-align: center;
+      font-family: Arial;
+      margin: 0;
     }
 
 ```
-h1 {
-  margin: 20px;
-}
-
-.video-container {
+.videos {
   display: flex;
   justify-content: center;
   gap: 20px;
-  padding: 20px;
+  margin: 20px;
   flex-wrap: wrap;
 }
 
 video {
   width: 45%;
   max-width: 400px;
-  border-radius: 12px;
   border: 3px solid #334155;
+  border-radius: 10px;
   background: black;
 }
 
-.controls {
-  margin-top: 20px;
+textarea {
+  width: 80%;
+  height: 100px;
+  margin: 10px;
+  border-radius: 8px;
+  padding: 10px;
 }
 
 button {
-  padding: 10px 18px;
+  padding: 10px 15px;
   margin: 5px;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 15px;
+  border-radius: 6px;
   background: #3b82f6;
   color: white;
-}
-
-button:hover {
-  opacity: 0.85;
+  cursor: pointer;
 }
 ```
 
@@ -58,41 +53,70 @@ button:hover {
 </head>
 <body>
 
-  <h1>👥 Two Person Camera View</h1>
+  <h1>📞 Manual 2-Person Video Call</h1>
 
-  <div class="video-container">
-    <video id="video1" autoplay playsinline></video>
-    <video id="video2" autoplay playsinline></video>
+  <div class="videos">
+    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="remoteVideo" autoplay playsinline></video>
   </div>
 
-  <div class="controls">
-    <button onclick="startCamera()">Start Camera</button>
-    <button onclick="stopCamera()">Stop Camera</button>
-  </div>
+<button onclick="startCamera()">Start Camera</button> <br>
+
+<button onclick="createOffer()">Create Offer</button> <button onclick="createAnswer()">Create Answer</button> <button onclick="addAnswer()">Add Answer</button>
+
+  <br>
+
+  <textarea id="offer" placeholder="Offer / Answer will appear here..."></textarea>
+
+  <textarea id="answer" placeholder="Paste answer here..."></textarea>
 
   <script>
-    let stream;
+    let localStream;
+    let peer = new RTCPeerConnection();
+
+    const localVideo = document.getElementById("localVideo");
+    const remoteVideo = document.getElementById("remoteVideo");
+
+    peer.ontrack = e => {
+      remoteVideo.srcObject = e.streams[0];
+    };
 
     async function startCamera() {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false
-        });
+      localStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
 
-        document.getElementById("video1").srcObject = stream;
-        document.getElementById("video2").srcObject = stream;
+      localVideo.srcObject = localStream;
 
-      } catch (err) {
-        alert("Camera access denied.");
-        console.error(err);
-      }
+      localStream.getTracks().forEach(track => {
+        peer.addTrack(track, localStream);
+      });
     }
 
-    function stopCamera() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+    async function createOffer() {
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+
+      document.getElementById("offer").value =
+        JSON.stringify(offer);
+    }
+
+    async function createAnswer() {
+      const offer = JSON.parse(document.getElementById("offer").value);
+
+      await peer.setRemoteDescription(offer);
+
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+
+      document.getElementById("offer").value =
+        JSON.stringify(answer);
+    }
+
+    async function addAnswer() {
+      const answer = JSON.parse(document.getElementById("answer").value);
+      await peer.setRemoteDescription(answer);
     }
   </script>
 
